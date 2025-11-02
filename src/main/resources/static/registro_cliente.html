@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Cliente - Ameribank</title>
+</head>
+<body>
+<h1>Registro de Cliente</h1>
+<form action="/api/clientes/registrar" method="post">
+    <input name="numeroCliente" placeholder="Número de cliente" required><br>
+    <input name="nombre" placeholder="Nombre" required><br>
+    <input name="apellidoPat" placeholder="Apellido paterno" required><br>
+    <input name="apellidoMat" placeholder="Apellido materno"><br>
+    <input name="fechaNac" type="date" required><br>
+    <input name="rfc" placeholder="RFC" required><br>
+    <input name="curp" placeholder="CURP" required><br>
+    <input name="email" type="email" placeholder="Correo electrónico" required><br>
+    <input name="celular" placeholder="Celular" required><br>
+    <textarea name="direccion" placeholder="Dirección"></textarea><br>
+    <input name="ciudad" placeholder="Ciudad"><br>
+    <input name="estado" placeholder="Estado"><br>
+    <input name="cp" placeholder="Código Postal"><br>
+    <select name="estatus" required>
+        <option value="ACTIVO">ACTIVO</option>
+        <option value="SUSPENDIDO">SUSPENDIDO</option>
+        <option value="BLOQUEADO">BLOQUEADO</option>
+    </select><br><br>
+    <button type="submit">Registrar</button>
+</form>
+</body>
+</html>
