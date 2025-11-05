@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class Movimiento {
     private Long id;
-    private Long cuentaId;  // Solo guardamos el ID en lugar del objeto completo
+    private Long cuentaId;
     private TipoMovimiento tipoMovimiento;
     private BigDecimal monto;
     private String descripcion;

@@ -30,6 +30,18 @@ public class MovimientoService {
         movimientoDAO.registrarRetiro(cuentaId, monto, descripcion);
     }
 
+    public void realizarTransferencia(Long cuentaOrigenId, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor a cero");
+        }
+
+        if (cuentaDestino == null || cuentaDestino.trim().isEmpty()) {
+            throw new IllegalArgumentException("La cuenta destino es requerida");
+        }
+
+        movimientoDAO.registrarTransferencia(cuentaOrigenId, cuentaDestino, monto, descripcion);
+    }
+
     public List<Movimiento> obtenerMovimientosPorCuenta(Long cuentaId, int limite) throws Exception {
         return movimientoDAO.obtenerMovimientosPorCuenta(cuentaId, limite);
     }

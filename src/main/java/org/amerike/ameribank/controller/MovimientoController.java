@@ -50,6 +50,23 @@ public class MovimientoController {
         }
     }
 
+    @PostMapping("/transferencia")
+    public ResponseEntity<?> realizarTransferencia(@RequestBody Map<String, Object> request) {
+        try {
+            Long cuentaOrigenId = Long.valueOf(request.get("cuentaOrigenId").toString());
+            String cuentaDestino = (String) request.get("cuentaDestino");
+            BigDecimal monto = new BigDecimal(request.get("monto").toString());
+            String descripcion = (String) request.get("descripcion");
+
+            movimientoService.realizarTransferencia(cuentaOrigenId, cuentaDestino, monto, descripcion);
+
+            return ResponseEntity.ok().body("Transferencia realizada exitosamente");
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al realizar transferencia: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/cuenta/{cuentaId}")
     public ResponseEntity<?> obtenerMovimientosPorCuenta(
             @PathVariable Long cuentaId,

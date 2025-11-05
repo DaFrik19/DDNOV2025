@@ -42,6 +42,21 @@ public class MovimientoDAO {
         }
     }
 
+    public void registrarTransferencia(Long cuentaOrigenId, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
+        String sql = "CALL RegistrarTransferencia(?, ?, ?, ?)";
+
+        try (Connection conn = ConexionDB.conectar();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+
+            stmt.setLong(1, cuentaOrigenId);
+            stmt.setString(2, cuentaDestino);
+            stmt.setBigDecimal(3, monto);
+            stmt.setString(4, descripcion);
+
+            stmt.executeUpdate();
+        }
+    }
+
     public List<Movimiento> obtenerMovimientosPorCuenta(Long cuentaId, int limite) throws Exception {
         String sql = "CALL ObtenerMovimientosPorCuenta(?, ?)";
         List<Movimiento> movimientos = new ArrayList<>();
