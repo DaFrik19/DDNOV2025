@@ -1,4 +1,3 @@
-// src/main/java/org/amerike/ameribank/service/MovimientoService.java
 package org.amerike.ameribank.service;
 
 import org.amerike.ameribank.dao.MovimientoDAO;

@@ -6,6 +6,7 @@ import org.amerike.ameribank.model.TipoMovimiento;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
