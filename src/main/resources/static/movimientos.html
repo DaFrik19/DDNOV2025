@@ -8,7 +8,6 @@
 <body>
 <h1>Gestión de Movimientos Bancarios</h1>
 
-<!-- Formulario para realizar operaciones -->
 <div>
     <h2>Realizar Operación</h2>
     <form id="movimientoForm" action="/movimientos" method="POST">
@@ -83,7 +82,7 @@
 
 <div>
     <h2>Consultar Movimientos</h2>
-    <form id="consultaForm" action="/movimientos/consulta" method="GET">
+    <form id="consultaForm" action="api/movimientos/consulta" method="GET">
         <div>
             <label for="cuentaIdConsulta">ID de Cuenta:</label>
             <input type="number" id="cuentaIdConsulta" name="cuentaId" required>
