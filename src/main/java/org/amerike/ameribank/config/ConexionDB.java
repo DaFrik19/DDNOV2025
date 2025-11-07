@@ -1,7 +1,5 @@
 package org.amerike.ameribank.config;
 
-import org.amerike.ameribank.config.security.security;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

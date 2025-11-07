@@ -1,7 +1,5 @@
 package org.amerike.ameribank.config;
 
-import org.amerike.ameribank.config.security.security;
-
 public class test {
      public static void main(String[] args) {
         security.init();

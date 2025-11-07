@@ -1,4 +1,4 @@
-package org.amerike.ameribank.config.security;
+package org.amerike.ameribank.config;
 
 import javax.crypto.Cipher;
 import java.io.FileWriter;
