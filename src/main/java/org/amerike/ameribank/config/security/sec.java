@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -13,17 +14,24 @@ import java.util.Base64;
 import java.util.Scanner;
 
 public class sec {
-    private static String rutaPrivateKey = "/src/main/java/org/amerike/ameribank/config/security/secrets/private_key.pem";
-    private static String rutaPublicKey = "/src/main/java/org/amerike/ameribank/config/security/secrets/public_key.pem";
-    private static String rutaCryptedFile = "/src/main/java/org/amerike/ameribank/config/security/secrets/accesodbjava.enc";
+
+    private static String homeDir = System.getProperty("user.home"); // establecemos el home PATH
+    private static Path secretsDir = Paths.get(homeDir, ".config", "ameribank", "secrets");
+    private static Path rutaCifrado = secretsDir.resolve("accesodbjava.enc");
+    private static Path rutaPrivateKey = secretsDir.resolve("private_key.pem");
+    private static Path rutaPublicKey = secretsDir.resolve("public_key.pem");
+
 
 
     private static boolean checkKeys() {
-        File PrivateKey = new File(rutaPrivateKey);
-        File PublicKey = new File(rutaPublicKey);
-        File CryptedFile = new File(rutaCryptedFile);
+        try {
+            Files.createDirectories(secretsDir);
+        }catch (Exception e) {
+            System.err.println("Error al generar directorios");
+        }
 
-        if (PrivateKey.exists() && PublicKey.exists() && CryptedFile.exists()) {
+
+        if (Files.exists(rutaPrivateKey) && Files.exists(rutaPublicKey) && Files.exists(rutaCifrado)) {
             System.out.println("Se encontro la llave publica y privada, y archivo encryptado...");
             return true;
         } else {
@@ -38,10 +46,10 @@ public class sec {
         KeyPair parClaves = generador.generateKeyPair();
 
         // Guardar llave Privada
-        guardarClavePEM(rutaPublicKey, parClaves.getPrivate(), "PRIVATE KEY");
+        guardarClavePEM(rutaPrivateKey.toString(), parClaves.getPrivate(), "PRIVATE KEY");
 
         // Guardar llave Pública
-        guardarClavePEM(rutaPrivateKey, parClaves.getPublic(), "PUBLIC KEY");
+        guardarClavePEM(rutaPublicKey.toString(), parClaves.getPublic(), "PUBLIC KEY");
     }
 
     private static void guardarClavePEM(String archivo, Key clave, String tipo) throws IOException {
@@ -57,7 +65,7 @@ public class sec {
     ///
     private static void cifrador(String NombreBaseDeDatos, String User, String Password) throws Exception {
 
-        byte[] claveBytes = Files.readAllBytes(Paths.get(rutaPublicKey));
+        byte[] claveBytes = Files.readAllBytes(Paths.get(rutaPublicKey.toString()));
         PublicKey clavePublica = cargarClavePublica(claveBytes);
 
 
@@ -66,7 +74,7 @@ public class sec {
         cifrador.init(Cipher.ENCRYPT_MODE, clavePublica);
         byte[] cifrado = cifrador.doFinal(datos.getBytes());
 
-        Files.write(Paths.get(rutaCryptedFile), cifrado);
+        Files.write(rutaCifrado, cifrado);
     }
 
     private static PublicKey cargarClavePublica(byte[] pem) throws Exception {
@@ -77,10 +85,10 @@ public class sec {
     }
     ///
     public static String[] obtenerCredenciales() throws Exception {
-        byte[] claveBytes = Files.readAllBytes(Paths.get(rutaPrivateKey));
+        byte[] claveBytes = Files.readAllBytes(Paths.get(rutaPrivateKey.toString()));
         PrivateKey clavePrivada = cargarClavePrivada(claveBytes);
 
-        byte[] cifrado = Files.readAllBytes(Paths.get(rutaCryptedFile));
+        byte[] cifrado = Files.readAllBytes(rutaCifrado);
         Cipher descifrador = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
         descifrador.init(Cipher.DECRYPT_MODE, clavePrivada);
         byte[] descifrado = descifrador.doFinal(cifrado);
@@ -108,7 +116,8 @@ public class sec {
             cifrador(NombreBaseDeDatos, User, Password);
             System.out.println("Cifrado finalizado");
         } catch (Exception e){
-            System.err.println("Error al cifrar base de datos");
+            System.err.println("Error al cifrar credenciales");
+            System.exit(1);
         }
     }
     ///
@@ -119,6 +128,7 @@ public class sec {
             return url;
         } catch (Exception e ) {
             System.err.println("Error al obtener las credenciales");
+            System.exit(1);
             return null;
         }
     }
@@ -129,6 +139,7 @@ public class sec {
             return user;
         } catch (Exception e ) {
             System.err.println("Error al obtener las credenciales");
+            System.exit(1);
             return null;
         }
     }
@@ -139,6 +150,7 @@ public class sec {
             return Password;
         } catch (Exception e ) {
             System.err.println("Error al obtener las credenciales");
+            System.exit(1);
             return null;
         }
     }
@@ -154,12 +166,10 @@ public class sec {
                System.out.println("LLaves generadas...");
            } catch (Exception e ){
                System.err.println("Error al generar las llaves");
+               System.exit(1);
            }
            escribirCredenciales();
         }
     }
-
-
-
 
 }
