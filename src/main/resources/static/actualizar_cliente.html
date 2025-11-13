@@ -1,29 +1,78 @@
+html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Actualizar Cliente - Ameribank</title>
+    <script>
+        async function cargarClientes() {
+            const res = await fetch('/api/clientes/todos');
+            const clientes = await res.json();
+            const tabla = document.getElementById('tablaClientes');
+            tabla.innerHTML = '';
+            clientes.forEach(c => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${c.clienteId}</td>
+                    <td>${c.numeroCliente}</td>
+                    <td>${c.nombre}</td>
+                    <td>${c.apellidoPat}</td>
+                    <td><button onclick='llenarFormulario(${JSON.stringify(c)})'>Editar</button></td>
+                `;
+                tabla.appendChild(fila);
+            });
+        }
+
+        function llenarFormulario(c) {
+            document.getElementById('clienteId').value = c.clienteId;
+            document.getElementById('numeroCliente').value = c.numeroCliente;
+            document.getElementById('nombre').value = c.nombre;
+            document.getElementById('apellidoPat').value = c.apellidoPat;
+            document.getElementById('apellidoMat').value = c.apellidoMat;
+            document.getElementById('fechaNac').value = c.fechaNac;
+            document.getElementById('rfc').value = c.rfc;
+            document.getElementById('curp').value = c.curp;
+            document.getElementById('email').value = c.email;
+            document.getElementById('celular').value = c.celular;
+            document.getElementById('direccion').value = c.direccion;
+            document.getElementById('ciudad').value = c.ciudad;
+            document.getElementById('estado').value = c.estado;
+            document.getElementById('cp').value = c.cp;
+            document.getElementById('estatus').value = c.estatus;
+        }
+
+        window.onload = cargarClientes;
+    </script>
 </head>
 <body>
 <h1>Actualizar Cliente</h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th><th>Número</th><th>Nombre</th><th>Apellido</th><th>Acción</th>
+    </tr>
+    </thead>
+    <tbody id="tablaClientes"></tbody>
+</table>
+
+<h2>Formulario de Actualización</h2>
 <form action="/api/clientes/actualizar" method="post">
-
-    <input name="clienteId" type="number" placeholder="ID del Cliente" required><br>
-
-    <input name="numeroCliente" placeholder="Número de cliente" required><br>
-    <input name="nombre" placeholder="Nombre" required><br>
-    <input name="apellidoPat" placeholder="Apellido paterno" required><br>
-    <input name="apellidoMat" placeholder="Apellido materno"><br>
-    <input name="fechaNac" type="date" required><br>
-    <input name="rfc" placeholder="RFC" required><br>
-    <input name="curp" placeholder="CURP" required><br>
-    <input name="email" type="email" placeholder="Correo electrónico" required><br>
-    <input name="celular" placeholder="Celular" required><br>
-    <textarea name="direccion" placeholder="Dirección"></textarea><br>
-    <input name="ciudad" placeholder="Ciudad"><br>
-    <input name="estado" placeholder="Estado"><br>
-    <input name="cp" placeholder="Código Postal"><br>
-    <select name="estatus" required>
+    <input id="clienteId" name="clienteId" placeholder="ID" readonly><br>
+    <input id="numeroCliente" name="numeroCliente" placeholder="Número de cliente" required><br>
+    <input id="nombre" name="nombre" placeholder="Nombre" required><br>
+    <input id="apellidoPat" name="apellidoPat" placeholder="Apellido paterno" required><br>
+    <input id="apellidoMat" name="apellidoMat" placeholder="Apellido materno"><br>
+    <input id="fechaNac" name="fechaNac" type="date" required><br>
+    <input id="rfc" name="rfc" placeholder="RFC" required><br>
+    <input id="curp" name="curp" placeholder="CURP" required><br>
+    <input id="email" name="email" type="email" placeholder="Correo electrónico" required><br>
+    <input id="celular" name="celular" placeholder="Celular" required><br>
+    <textarea id="direccion" name="direccion" placeholder="Dirección"></textarea><br>
+    <input id="ciudad" name="ciudad" placeholder="Ciudad"><br>
+    <input id="estado" name="estado" placeholder="Estado"><br>
+    <input id="cp" name="cp" placeholder="Código Postal"><br>
+    <select id="estatus" name="estatus" required>
         <option value="ACTIVO">ACTIVO</option>
         <option value="SUSPENDIDO">SUSPENDIDO</option>
         <option value="BLOQUEADO">BLOQUEADO</option>
@@ -31,4 +80,4 @@
     <button type="submit">Actualizar</button>
 </form>
 </body>
-</html>
+

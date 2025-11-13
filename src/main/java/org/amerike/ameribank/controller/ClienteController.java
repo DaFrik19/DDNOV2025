@@ -5,6 +5,8 @@ import org.amerike.ameribank.model.cliente;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -49,6 +51,19 @@ public class ClienteController {
             return "Error al registrar cliente: " + e.getMessage();
         }
     }
+
+
+    @GetMapping("/todos")
+    public List<cliente> obtenerTodos() {
+        try {
+            return new ClienteDAO().listarClientes();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+
 
     @PostMapping("/actualizar")
     public String actualizar(@RequestParam int clienteId,
