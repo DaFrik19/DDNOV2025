@@ -13,4 +13,3 @@ public class ConexionDB {
         return DriverManager.getConnection(URL, USER, PASS);
     }
 }
-
