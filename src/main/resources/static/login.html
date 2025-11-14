@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio de Sesión - Ameribank</title>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+
+<h1>Inicio de Sesión de Cliente</h1>
+<form id="loginForm">
+    <input name="usr" id="usr" placeholder="Usuario" required><br>
+    <input type="password" name="pwd" id="pwd" placeholder="Contraseña" required><br>
+    <br>
+    <button type="submit">Iniciar Sesión</button>
+</form>
+
+<div id="mensaje"></div>
+
+<script>
+    const LOGIN_URL = '/api/login/loggear';
+
+    const form = document.getElementById('loginForm');
+    const mensajeDiv = document.getElementById('mensaje');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        mensajeDiv.textContent = '';
+
+        const usr = document.getElementById('usr').value;
+        const pwd = document.getElementById('pwd').value;
+
+        const credenciales = { usr: usr, pwd: pwd };
+
+        fetch(LOGIN_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(credenciales)
+        })
+        .then(response => {
+            return response.text().then(text => {
+                if (response.ok) {
+                    mostrarMensaje('success', text);
+                } else if (response.status === 401) {
+                    mostrarMensaje('error', text);
+                } else {
+                    mostrarMensaje('error', `Error ${response.status}: ${text || 'Ocurrió un error inesperado.'}`);
+                }
+            });
+        })
+        .catch(error => {
+            mostrarMensaje('error', 'Fallo de red: No se pudo conectar al servidor de Spring Boot.');
+            console.error('Fetch error:', error);
+        });
+    });
+
+    function mostrarMensaje(tipo, texto) {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+    }
+</script>
+
+</body>
+</html>
+
+<!--
+El html se conecta con el Controller por medio del @RequestBody, esto le permite al controller confirmar que
+se están cumpliendo sus requisitos.
+
+Hay un event listener que estará atento a que se de click en el botón de submit, y el prvent default permitirá
+enviar los datos a través del JavaScript, con el fetch llama al api que se hizo en el modelo, y lo asigna como
+un post, luego por medio con el header le avisa a springboot que el cuerpo es un JSON, y convierte las
+credenciales en un string de JSON.
+
+Si sale bien continuará con el login, y si no, dará error dependiendo de lo que haya salido mal
+-->
