@@ -12,136 +12,84 @@ import java.util.List;
 @Repository
 public class MovimientoDAO {
 
-    public void registrarDeposito(Long cuentaId, BigDecimal monto, String descripcion, String cuentaRemitente) throws Exception {
+    public void registrarDeposito(String numeroCuenta, BigDecimal monto, String descripcion, String cuentaRemitente) throws Exception {
         String sql = "CALL RegistrarDeposito(?, ?, ?, ?)";
-
-        System.out.println("DAO - RegistrarDeposito:");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-        System.out.println("  cuentaRemitente: " + cuentaRemitente);
-
-        try (Connection conn = ConexionDB.conectar();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            stmt.setLong(1, cuentaId);
+        try (Connection conn = ConexionDB.conectar(); CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setString(1, numeroCuenta); // setString
             stmt.setBigDecimal(2, monto);
             stmt.setString(3, descripcion);
             stmt.setString(4, cuentaRemitente);
-
             stmt.executeUpdate();
-            System.out.println("DAO - Deposito ejecutado exitosamente");
-
         } catch (SQLException e) {
-            System.out.println("DAO - ERROR SQL en deposito: " + e.getMessage());
-            System.out.println("SQL State: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            throw new Exception("Error al registrar depósito: " + e.getMessage(), e);
-        } catch (Exception e) {
-            System.out.println("DAO - ERROR general en deposito: " + e.getMessage());
-            throw e;
+            throw new Exception(e.getMessage(), e);
         }
     }
 
-    public void registrarRetiro(Long cuentaId, BigDecimal monto, String descripcion) throws Exception {
+    public void registrarRetiro(String numeroCuenta, BigDecimal monto, String descripcion) throws Exception {
         String sql = "CALL RegistrarRetiro(?, ?, ?)";
-
-        System.out.println("DAO - RegistrarRetiro:");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-
-        try (Connection conn = ConexionDB.conectar();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            stmt.setLong(1, cuentaId);
+        try (Connection conn = ConexionDB.conectar(); CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setString(1, numeroCuenta); // setString
             stmt.setBigDecimal(2, monto);
             stmt.setString(3, descripcion);
-
             stmt.executeUpdate();
-            System.out.println("DAO - Retiro ejecutado exitosamente");
-
         } catch (SQLException e) {
-            System.out.println("DAO - ERROR SQL en retiro: " + e.getMessage());
-            System.out.println("SQL State: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            throw new Exception("Error al registrar retiro: " + e.getMessage(), e);
-        } catch (Exception e) {
-            System.out.println("DAO - ERROR general en retiro: " + e.getMessage());
-            throw e;
+            throw new Exception(e.getMessage(), e);
         }
     }
 
-    public void registrarTransferencia(Long cuentaOrigenId, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
+    public void registrarTransferencia(String cuentaOrigen, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
         String sql = "CALL RegistrarTransferencia(?, ?, ?, ?)";
-
-        System.out.println("DAO - RegistrarTransferencia:");
-        System.out.println("  cuentaOrigenId: " + cuentaOrigenId);
-        System.out.println("  cuentaDestino: " + cuentaDestino);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-
-        try (Connection conn = ConexionDB.conectar();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            stmt.setLong(1, cuentaOrigenId);
-            stmt.setString(2, cuentaDestino);
+        try (Connection conn = ConexionDB.conectar(); CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setString(1, cuentaOrigen); // setString
+            stmt.setString(2, cuentaDestino); // setString
             stmt.setBigDecimal(3, monto);
             stmt.setString(4, descripcion);
-
             stmt.executeUpdate();
-            System.out.println("DAO - Transferencia ejecutada exitosamente");
-
         } catch (SQLException e) {
-            System.out.println("DAO - ERROR SQL en transferencia: " + e.getMessage());
-            System.out.println("SQL State: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            throw new Exception("Error al registrar transferencia: " + e.getMessage(), e);
-        } catch (Exception e) {
-            System.out.println("DAO - ERROR general en transferencia: " + e.getMessage());
-            throw e;
+            throw new Exception(e.getMessage(), e);
         }
     }
 
-    public List<Movimiento> obtenerMovimientosPorCuenta(Long cuentaId, int limite) throws Exception {
+    private Movimiento mapearResultSet(ResultSet rs) throws SQLException {
+        Movimiento movimiento = new Movimiento();
+        movimiento.setId(rs.getLong("id"));
+        movimiento.setTipoMovimiento(rs.getString("tipo_movimiento"));
+        movimiento.setMonto(rs.getBigDecimal("monto"));
+        movimiento.setDescripcion(rs.getString("descripcion"));
+        movimiento.setFechaMovimiento(rs.getTimestamp("fecha_movimiento").toLocalDateTime());
+        movimiento.setCuentaRemitente(rs.getString("cuenta_remitente"));
+        movimiento.setCuentaReceptora(rs.getString("cuenta_receptora"));
+        return movimiento;
+    }
+
+    public List<Movimiento> obtenerMovimientosPorCuenta(String numeroCuenta, int limite) throws Exception {
         String sql = "CALL ObtenerMovimientosPorCuenta(?, ?)";
         List<Movimiento> movimientos = new ArrayList<>();
-
-        System.out.println("DAO - ObtenerMovimientosPorCuenta:");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  limite: " + limite);
-
-        try (Connection conn = ConexionDB.conectar();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            stmt.setLong(1, cuentaId);
+        try (Connection conn = ConexionDB.conectar(); CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setString(1, numeroCuenta); // setString
             stmt.setInt(2, limite);
-
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                Movimiento movimiento = new Movimiento();
-                movimiento.setId(rs.getLong("id"));
-                movimiento.setCuentaId(rs.getLong("cuenta_id"));
-                movimiento.setTipoMovimiento(rs.getString("tipo_movimiento"));
-                movimiento.setMonto(rs.getBigDecimal("monto"));
-                movimiento.setDescripcion(rs.getString("descripcion"));
-                movimiento.setFechaMovimiento(rs.getTimestamp("fecha_movimiento").toLocalDateTime());
-                movimiento.setCuentaRemitente(rs.getString("cuenta_remitente"));
-                movimiento.setCuentaReceptora(rs.getString("cuenta_receptora"));
-
-                movimientos.add(movimiento);
+                movimientos.add(mapearResultSet(rs));
             }
-
-            System.out.println("DAO - Movimientos encontrados: " + movimientos.size());
-
         } catch (SQLException e) {
-            System.out.println("DAO - ERROR SQL en consulta: " + e.getMessage());
-            System.out.println("SQL State: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            throw new Exception("Error al consultar movimientos: " + e.getMessage(), e);
+            throw new Exception(e.getMessage(), e);
         }
+        return movimientos;
+    }
 
+    public List<Movimiento> obtenerMovimientoPorId(Long movimientoId) throws Exception {
+        String sql = "CALL ObtenerMovimientoPorId(?)";
+        List<Movimiento> movimientos = new ArrayList<>();
+        try (Connection conn = ConexionDB.conectar(); CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setLong(1, movimientoId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                movimientos.add(mapearResultSet(rs));
+            }
+        } catch (SQLException e) {
+            throw new Exception(e.getMessage(), e);
+        }
         return movimientos;
     }
 }

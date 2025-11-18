@@ -20,13 +20,13 @@
 
     <br><br>
 
-    <label for="cuentaId" id="labelCuentaId">ID de Cuenta:</label>
-    <input type="text" id="cuentaId" name="cuentaId">
+    <label for="numeroCuenta" id="labelNumeroCuenta">Número de Cuenta:</label>
+    <input type="text" id="numeroCuenta" name="numeroCuenta" placeholder="Ej: 1111111111">
 
     <br><br>
 
     <div id="campoCuentaDestino" style="display: none;">
-        <label for="cuentaDestino">Cuenta Destino (Número de Cuenta):</label>
+        <label for="cuentaDestino">Cuenta Destino (Número):</label>
         <input type="text" id="cuentaDestino" name="cuentaDestino">
         <br><br>
     </div>
@@ -53,9 +53,15 @@
 <hr>
 <h2>Consultar Historial</h2>
 
-<label for="consultaCuentaId">ID de Cuenta a consultar:</label>
-<input type="text" id="consultaCuentaId" placeholder="Ej: 1">
+<label for="consultaNumeroCuenta">Número de Cuenta a consultar:</label>
+<input type="text" id="consultaNumeroCuenta" placeholder="Ej: 1111111111">
 <button id="btnConsultar">Consultar</button>
+
+<br><br>
+
+<label for="consultaMovimientoId">Buscar Recibo Específico (ID Transacción):</label>
+<input type="text" id="consultaMovimientoId" placeholder="Ej: 15">
+<button id="btnConsultarPorId">Buscar Recibo</button>
 
 <br><br>
 
@@ -76,11 +82,10 @@
 </table>
 
 <script>
-    // --- 1. Lógica para mostrar/ocultar campos del formulario ---
     const tipoOperacionSelect = document.getElementById('tipoOperacion');
     const campoCuentaDestino = document.getElementById('campoCuentaDestino');
     const campoCuentaRemitente = document.getElementById('campoCuentaRemitente');
-    const labelCuentaId = document.getElementById('labelCuentaId');
+    const labelNumeroCuenta = document.getElementById('labelNumeroCuenta');
 
     tipoOperacionSelect.addEventListener('change', function() {
         const tipo = this.value;
@@ -88,12 +93,12 @@
         campoCuentaRemitente.style.display = 'none';
 
         if (tipo === 'RETIRO') {
-            labelCuentaId.textContent = 'ID de Cuenta:';
+            labelNumeroCuenta.textContent = 'Número de Cuenta:';
         } else if (tipo === 'DEPOSITO') {
-            labelCuentaId.textContent = 'ID de Cuenta (Receptora):';
+            labelNumeroCuenta.textContent = 'Número de Cuenta (Receptora):';
             campoCuentaRemitente.style.display = 'block';
         } else if (tipo === 'TRANSFERENCIA') {
-            labelCuentaId.textContent = 'ID de Cuenta (Origen):';
+            labelNumeroCuenta.textContent = 'Número de Cuenta (Origen):';
             campoCuentaDestino.style.display = 'block';
         }
     });
@@ -104,23 +109,25 @@
         const tipo = document.getElementById('tipoOperacion').value;
         const formData = new FormData();
         let url = '';
+        const numCuentaOperacion = document.getElementById('numeroCuenta').value;
 
         if (tipo === 'RETIRO') {
             url = '/api/movimientos/retiro';
-            formData.append('cuentaId', document.getElementById('cuentaId').value);
+            // CAMBIO: Enviamos numeroCuenta en lugar de cuentaId
+            formData.append('numeroCuenta', numCuentaOperacion);
             formData.append('monto', document.getElementById('monto').value);
             formData.append('descripcion', document.getElementById('descripcion').value);
 
         } else if (tipo === 'DEPOSITO') {
             url = '/api/movimientos/deposito';
-            formData.append('cuentaId', document.getElementById('cuentaId').value);
+            formData.append('numeroCuenta', numCuentaOperacion);
             formData.append('monto', document.getElementById('monto').value);
             formData.append('descripcion', document.getElementById('descripcion').value);
             formData.append('cuentaRemitente', document.getElementById('cuentaRemitente').value);
 
         } else if (tipo === 'TRANSFERENCIA') {
             url = '/api/movimientos/transferencia';
-            formData.append('cuentaOrigenId', document.getElementById('cuentaId').value);
+            formData.append('cuentaOrigen', numCuentaOperacion);
             formData.append('cuentaDestino', document.getElementById('cuentaDestino').value);
             formData.append('monto', document.getElementById('monto').value);
             formData.append('descripcion', document.getElementById('descripcion').value);
@@ -136,72 +143,77 @@
             if (response.ok) {
                 if (data.status === 'success') {
                     alert('Éxito: ' + data.message);
-                    // Opcional: Limpiar formulario
-                    // event.target.reset();
+                    // Auto-llenar consulta y buscar
+                    document.getElementById('consultaNumeroCuenta').value = numCuentaOperacion;
+                    consultarHistorial();
                 } else {
-                    alert('Error: ' + (data.message || 'Error desconocido del servidor'));
+                    alert('Error: ' + (data.message || 'Error desconocido'));
                 }
             } else {
-                alert('Error del Servidor (' + response.status + '): ' + (data.message || 'Sin mensaje'));
+                alert('Error del Servidor: ' + (data.message || 'Sin mensaje'));
             }
         } catch (error) {
-            console.error('Error fatal en fetch:', error);
-            alert('ERROR FATAL: No se pudo procesar la respuesta. Revisa la consola (F12). Error: ' + error.message);
+            alert('ERROR FATAL: ' + error.message);
         }
     });
 
-    document.getElementById('btnConsultar').addEventListener('click', async function() {
-        const cuentaId = document.getElementById('consultaCuentaId').value;
+    // Función de consulta general
+    async function consultarHistorial() {
+        const numeroCuenta = document.getElementById('consultaNumeroCuenta').value;
         const tbody = document.getElementById('historialBody');
-
         tbody.innerHTML = '<tr><td colspan="7">Cargando...</td></tr>';
 
-        if (!cuentaId) {
-            tbody.innerHTML = '<tr><td colspan="7">Por favor, ingresa un ID de cuenta.</td></tr>';
-            return;
+        try {
+            const response = await fetch(`/api/movimientos/consulta?numeroCuenta=${numeroCuenta}&limite=20`);
+            if (!response.ok) throw new Error('Error en consulta');
+            const movimientos = await response.json();
+            popularTabla(movimientos);
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="7">Error: ${error.message}</td></tr>`;
         }
+    }
+
+    // Función de consulta por ID de Recibo
+    async function consultarPorId() {
+        const movId = document.getElementById('consultaMovimientoId').value;
+        const tbody = document.getElementById('historialBody');
+        tbody.innerHTML = '<tr><td colspan="7">Cargando...</td></tr>';
 
         try {
-            const response = await fetch(`/api/movimientos/consulta?cuentaId=${cuentaId}&limite=20`);
-
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
+            const response = await fetch(`/api/movimientos/consulta/por-id?movimientoId=${movId}`);
+            if (!response.ok) throw new Error('Error en consulta');
             const movimientos = await response.json();
-
-            // Limpiar tabla para poner los datos buenos
-            tbody.innerHTML = '';
-
-            if (movimientos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">No se encontraron movimientos para esta cuenta.</td></tr>';
-                return;
-            }
-
-            // Llenar la tabla
-            movimientos.forEach(mov => {
-                const tr = document.createElement('tr');
-
-                // Formatear la fecha
-                const fecha = new Date(mov.fechaMovimiento).toLocaleString('es-ES');
-
-                tr.innerHTML = `
-                    <td>${mov.id}</td>
-                    <td>${fecha}</td>
-                    <td>${mov.tipoMovimiento}</td>
-                    <td>${mov.monto}</td>
-                    <td>${mov.descripcion}</td>
-                    <td>${mov.cuentaRemitente || '-'}</td>
-                    <td>${mov.cuentaReceptora || '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
+            popularTabla(movimientos);
         } catch (error) {
-            console.error('Error al consultar historial:', error);
-            tbody.innerHTML = `<tr><td colspan="7">Error al cargar el historial: ${error.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7">Error: ${error.message}</td></tr>`;
         }
-    });
+    }
+
+    function popularTabla(movimientos) {
+        const tbody = document.getElementById('historialBody');
+        tbody.innerHTML = '';
+        if (!movimientos || movimientos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">No se encontraron movimientos.</td></tr>';
+            return;
+        }
+        movimientos.forEach(mov => {
+            const tr = document.createElement('tr');
+            const fecha = new Date(mov.fechaMovimiento).toLocaleString('es-ES');
+            tr.innerHTML = `
+                <td>${mov.id}</td>
+                <td>${fecha}</td>
+                <td>${mov.tipoMovimiento}</td>
+                <td>${mov.monto}</td>
+                <td>${mov.descripcion}</td>
+                <td>${mov.cuentaRemitente || '-'}</td>
+                <td>${mov.cuentaReceptora || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('btnConsultar').addEventListener('click', consultarHistorial);
+    document.getElementById('btnConsultarPorId').addEventListener('click', consultarPorId);
 
 </script>
 
