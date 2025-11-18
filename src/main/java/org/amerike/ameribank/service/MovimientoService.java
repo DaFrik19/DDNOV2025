@@ -14,35 +14,34 @@ public class MovimientoService {
     @Autowired
     private MovimientoDAO movimientoDAO;
 
-    public void realizarDeposito(Long cuentaId, BigDecimal monto, String descripcion, String cuentaRemitente) throws Exception {
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor a cero");
-        }
+    public void realizarDeposito(String numeroCuenta, BigDecimal monto, String descripcion, String cuentaRemitente) throws Exception {
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("El monto debe ser mayor a cero");
+        if (numeroCuenta == null || numeroCuenta.isEmpty()) throw new IllegalArgumentException("El número de cuenta es requerido");
 
-        movimientoDAO.registrarDeposito(cuentaId, monto, descripcion, cuentaRemitente);
+        movimientoDAO.registrarDeposito(numeroCuenta, monto, descripcion, cuentaRemitente);
     }
 
-    public void realizarRetiro(Long cuentaId, BigDecimal monto, String descripcion) throws Exception {
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor a cero");
-        }
+    public void realizarRetiro(String numeroCuenta, BigDecimal monto, String descripcion) throws Exception {
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("El monto debe ser mayor a cero");
+        if (numeroCuenta == null || numeroCuenta.isEmpty()) throw new IllegalArgumentException("El número de cuenta es requerido");
 
-        movimientoDAO.registrarRetiro(cuentaId, monto, descripcion);
+        movimientoDAO.registrarRetiro(numeroCuenta, monto, descripcion);
     }
 
-    public void realizarTransferencia(Long cuentaOrigenId, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor a cero");
-        }
+    public void realizarTransferencia(String cuentaOrigen, String cuentaDestino, BigDecimal monto, String descripcion) throws Exception {
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("El monto debe ser mayor a cero");
+        if (cuentaOrigen == null || cuentaOrigen.isEmpty()) throw new IllegalArgumentException("La cuenta origen es requerida");
+        if (cuentaDestino == null || cuentaDestino.isEmpty()) throw new IllegalArgumentException("La cuenta destino es requerida");
 
-        if (cuentaDestino == null || cuentaDestino.trim().isEmpty()) {
-            throw new IllegalArgumentException("La cuenta destino es requerida");
-        }
-
-        movimientoDAO.registrarTransferencia(cuentaOrigenId, cuentaDestino, monto, descripcion);
+        movimientoDAO.registrarTransferencia(cuentaOrigen, cuentaDestino, monto, descripcion);
     }
 
-    public List<Movimiento> obtenerMovimientosPorCuenta(Long cuentaId, int limite) throws Exception {
-        return movimientoDAO.obtenerMovimientosPorCuenta(cuentaId, limite);
+    public List<Movimiento> obtenerMovimientosPorCuenta(String numeroCuenta, int limite) throws Exception {
+        if (numeroCuenta == null || numeroCuenta.isEmpty()) throw new IllegalArgumentException("El número de cuenta es requerido");
+        return movimientoDAO.obtenerMovimientosPorCuenta(numeroCuenta, limite);
+    }
+
+    public List<Movimiento> obtenerMovimientoPorId(Long movimientoId) throws Exception {
+        return movimientoDAO.obtenerMovimientoPorId(movimientoId);
     }
 }

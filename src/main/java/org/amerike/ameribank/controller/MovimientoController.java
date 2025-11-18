@@ -21,102 +21,76 @@ public class MovimientoController {
 
     @PostMapping("/deposito")
     public Map<String, String> registrarDeposito(
-            @RequestParam Long cuentaId,
+            @RequestParam String numeroCuenta, // CAMBIO: String
             @RequestParam BigDecimal monto,
             @RequestParam String descripcion,
             @RequestParam String cuentaRemitente) {
 
-        System.out.println("CONTROLLER - DEPOSITO INICIADO");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-        System.out.println("  cuentaRemitente: " + cuentaRemitente);
-
         Map<String, String> response = new HashMap<>();
         try {
-            movimientoService.realizarDeposito(cuentaId, monto, descripcion, cuentaRemitente);
+            movimientoService.realizarDeposito(numeroCuenta, monto, descripcion, cuentaRemitente);
             response.put("status", "success");
             response.put("message", "Depósito realizado exitosamente");
-            System.out.println("CONTROLLER - DEPOSITO EXITOSO");
         } catch (Exception e) {
-            System.out.println("CONTROLLER - ERROR DEPOSITO: " + e.getMessage());
-            e.printStackTrace();
             response.put("status", "error");
-            response.put("message", "Error al realizar depósito: " + e.getMessage());
+            response.put("message", "Error: " + e.getMessage());
         }
         return response;
     }
 
     @PostMapping("/retiro")
     public Map<String, String> registrarRetiro(
-            @RequestParam Long cuentaId,
+            @RequestParam String numeroCuenta, // CAMBIO: String
             @RequestParam BigDecimal monto,
             @RequestParam String descripcion) {
 
-        System.out.println("CONTROLLER - RETIRO INICIADO");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-
         Map<String, String> response = new HashMap<>();
         try {
-            movimientoService.realizarRetiro(cuentaId, monto, descripcion);
+            movimientoService.realizarRetiro(numeroCuenta, monto, descripcion);
             response.put("status", "success");
             response.put("message", "Retiro realizado exitosamente");
-            System.out.println("CONTROLLER - RETIRO EXITOSO");
         } catch (Exception e) {
-            System.out.println("CONTROLLER - ERROR RETIRO: " + e.getMessage());
-            e.printStackTrace();
             response.put("status", "error");
-            response.put("message", "Error al realizar retiro: " + e.getMessage());
+            response.put("message", "Error: " + e.getMessage());
         }
         return response;
     }
 
     @PostMapping("/transferencia")
     public Map<String, String> registrarTransferencia(
-            @RequestParam Long cuentaOrigenId,
+            @RequestParam String cuentaOrigen, // CAMBIO: String
             @RequestParam String cuentaDestino,
             @RequestParam BigDecimal monto,
             @RequestParam String descripcion) {
 
-        System.out.println("CONTROLLER - TRANSFERENCIA INICIADA");
-        System.out.println("  cuentaOrigenId: " + cuentaOrigenId);
-        System.out.println("  cuentaDestino: " + cuentaDestino);
-        System.out.println("  monto: " + monto);
-        System.out.println("  descripcion: " + descripcion);
-
         Map<String, String> response = new HashMap<>();
         try {
-            movimientoService.realizarTransferencia(cuentaOrigenId, cuentaDestino, monto, descripcion);
+            movimientoService.realizarTransferencia(cuentaOrigen, cuentaDestino, monto, descripcion);
             response.put("status", "success");
             response.put("message", "Transferencia realizada exitosamente");
-            System.out.println("CONTROLLER - TRANSFERENCIA EXITOSA");
         } catch (Exception e) {
-            System.out.println("CONTROLLER - ERROR TRANSFERENCIA: " + e.getMessage());
-            e.printStackTrace();
             response.put("status", "error");
-            response.put("message", "Error al realizar transferencia: " + e.getMessage());
+            response.put("message", "Error: " + e.getMessage());
         }
         return response;
     }
 
     @GetMapping("/consulta")
     public List<Movimiento> consultarMovimientos(
-            @RequestParam Long cuentaId,
+            @RequestParam String numeroCuenta, // CAMBIO: String
             @RequestParam(defaultValue = "10") int limite) {
-
-        System.out.println("CONTROLLER - CONSULTA INICIADA");
-        System.out.println("  cuentaId: " + cuentaId);
-        System.out.println("  limite: " + limite);
-
         try {
-            List<Movimiento> movimientos = movimientoService.obtenerMovimientosPorCuenta(cuentaId, limite);
-            System.out.println("CONTROLLER - MOVIMIENTOS ENCONTRADOS: " + movimientos.size());
-            return movimientos;
+            return movimientoService.obtenerMovimientosPorCuenta(numeroCuenta, limite);
         } catch (Exception e) {
-            System.out.println("CONTROLLER - ERROR CONSULTA: " + e.getMessage());
-            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    @GetMapping("/consulta/por-id")
+    public List<Movimiento> consultarMovimientoPorId(@RequestParam Long movimientoId) {
+        try {
+            return movimientoService.obtenerMovimientoPorId(movimientoId);
+        } catch (Exception e) {
             return List.of();
         }
     }

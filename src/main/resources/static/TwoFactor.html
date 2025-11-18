@@ -109,7 +109,7 @@
         if (resp.ok) {
           const txt = await resp.text();
           verifyResult.style.color = 'blue';
-          verifyResult.textContent = txt || '2FA verificado.';
+          verifyResult.textContent = txt || 'Sesión Iniciada.';
         } else if (resp.status === 401) {
           const txt = await resp.text();
           verifyResult.style.color = 'purple';

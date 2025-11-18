@@ -36,7 +36,7 @@ public class TwoFactorRestController {
         String code = body.get("code") == null ? "" : body.get("code").toString();
         try {
             boolean ok = svc.verify(usuarioId, code);
-            if (ok) return ResponseEntity.ok("2FA verificado.");
+            if (ok) return ResponseEntity.ok("Sesión Iniciada.");
             else return ResponseEntity.status(401).body("Verificación fallida o código expirado.");
         } catch (SQLException e) {
             return ResponseEntity.status(500).body("Error verificando 2FA: " + e.getMessage());
@@ -44,3 +44,5 @@ public class TwoFactorRestController {
     }
 
 }
+
+

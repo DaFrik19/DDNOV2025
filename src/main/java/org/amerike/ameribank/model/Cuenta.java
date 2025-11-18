@@ -3,7 +3,7 @@ package org.amerike.ameribank.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class cuenta {
+public class Cuenta {
     private int id;
     private String numeroCuenta;
     private String tipoCuenta;
@@ -68,3 +68,4 @@ public class cuenta {
         this.fechaCreacion = fechaCreacion;
     }
 }
+

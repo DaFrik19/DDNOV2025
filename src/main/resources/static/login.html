@@ -4,8 +4,63 @@
     <meta charset="UTF-8">
     <title>Inicio de Sesión - Ameribank</title>
     <style>
-        .error { color: red; }
-        .success { color: green; }
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 2rem auto; padding: 0 15px; }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #0056b3; }
+
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+
+        /* Estilos para el Modal (Pop-up) de 2FA */
+        #twoFactorModal {
+            display: none; /* Controlado por JS */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content h2 { color: #007bff; }
+        #twoFactorCode { margin-top: 15px; }
+
+        /* Nuevo estilo para mostrar el código de simulación */
+        .simulated-code {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #28a745; /* Verde para simular éxito/entrega */
+            padding: 10px;
+            border: 2px dashed #28a74550;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -18,41 +73,93 @@
     <button type="submit">Iniciar Sesión</button>
 </form>
 
-<div id="mensaje"></div>
+<div id="mensaje" style="margin-top: 15px;"></div>
+
+<!-- Modal (Pop-up) para la verificación 2FA -->
+<div id="twoFactorModal">
+    <div class="modal-content">
+        <h2>Verificación 2FA Requerida</h2>
+        <p>Llave generada en el servidor.</p>
+
+        <!-- Elemento donde se mostrará el código simulado -->
+        <div id="simulatedCodeDisplay" class="simulated-code">
+            Cargando código...
+        </div>
+
+        <input type="text" id="twoFactorCode" placeholder="Ingresa código 2FA" required><br>
+        <button id="verify2faBtn" style="margin-top: 15px;">Verificar Código</button>
+        <div id="twoFactorMensaje" style="margin-top: 10px;"></div>
+    </div>
+</div>
 
 <script>
     const LOGIN_URL = '/api/login/loggear';
+    const GENERATE_2FA_URL = '/api/2fa/generate';
+    const VERIFY_2FA_URL = '/api/2fa/verify';
 
     const form = document.getElementById('loginForm');
     const mensajeDiv = document.getElementById('mensaje');
+    const modal = document.getElementById('twoFactorModal');
+    const verify2faBtn = document.getElementById('verify2faBtn');
+    const twoFactorCodeInput = document.getElementById('twoFactorCode');
+    const twoFactorMensaje = document.getElementById('twoFactorMensaje');
+    const simulatedCodeDisplay = document.getElementById('simulatedCodeDisplay');
 
+    let currentUsuarioId = null;
+
+    function mostrarMensaje(tipo, texto) {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+    }
+
+    function mostrarModal2FA() {
+        modal.style.display = 'flex'; // Usar flex para centrar
+        twoFactorCodeInput.value = '';
+        twoFactorMensaje.textContent = '';
+        simulatedCodeDisplay.textContent = 'Generando...'; // Resetear el display del código
+    }
+
+    // --- Lógica de la Primera Etapa: Login (Usuario/Contraseña) ---
     form.addEventListener('submit', function(event) {
         event.preventDefault();
-
-        mensajeDiv.textContent = '';
+        mostrarMensaje('', ''); // Limpiar mensajes
 
         const usr = document.getElementById('usr').value;
         const pwd = document.getElementById('pwd').value;
-
         const credenciales = { usr: usr, pwd: pwd };
 
         fetch(LOGIN_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credenciales)
         })
         .then(response => {
-            return response.text().then(text => {
-                if (response.ok) {
-                    mostrarMensaje('success', text);
-                } else if (response.status === 401) {
-                    mostrarMensaje('error', text);
-                } else {
-                    mostrarMensaje('error', `Error ${response.status}: ${text || 'Ocurrió un error inesperado.'}`);
-                }
-            });
+            // CRÍTICO: Primero intentamos leer como JSON ya que el backend lo garantiza.
+            return response.json()
+                .then(data => ({ status: response.status, data: data }))
+                .catch(() => ({ status: response.status, data: { message: 'Respuesta inválida o vacía.' } }));
+        })
+        .then(({ status, data }) => {
+            // Verificar si el servidor respondió con 2FA_REQUIRED (estado 202 ACCEPTED)
+            if (status === 202 && data.status === '2FA_REQUIRED' && data.usuarioId) {
+                currentUsuarioId = data.usuarioId;
+                mostrarModal2FA(); // ¡Mostrar el pop-up!
+                generate2faKey(data.usuarioId); // Generar la llave en el servidor
+                mostrarMensaje('success', data.message || 'Credenciales válidas. Verificación 2FA iniciada.');
+            }
+            // Manejar errores de credenciales (401) o cualquier otro error
+            else if (status === 401) {
+                mostrarMensaje('error', data.message || 'Credenciales incorrectas.');
+            }
+            // Manejar un login exitoso si el backend hubiera devuelto 200 sin 2FA_REQUIRED
+            else if (status >= 200 && status < 300) {
+                 // Si llega aquí, significa que el login fue OK sin 2FA (o el 2FA fue saltado/completado previamente)
+                 mostrarMensaje('success', data.message || 'Inicio de sesión exitoso sin 2FA.');
+            }
+            // Manejar errores del servidor (500)
+            else {
+                mostrarMensaje('error', `Error ${status}: ${data.message || 'Ocurrió un error inesperado.'}`);
+            }
         })
         .catch(error => {
             mostrarMensaje('error', 'Fallo de red: No se pudo conectar al servidor de Spring Boot.');
@@ -60,23 +167,74 @@
         });
     });
 
-    function mostrarMensaje(tipo, texto) {
-        mensajeDiv.textContent = texto;
-        mensajeDiv.className = tipo;
+    // --- Lógica para Generar la Llave 2FA (Disparado después del login exitoso) ---
+    function generate2faKey(usuarioId) {
+         fetch(GENERATE_2FA_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId })
+        })
+        .then(resp => {
+            // CRÍTICO: Leer la respuesta como JSON
+            return resp.json()
+                .then(data => ({ ok: resp.ok, data: data }))
+                .catch(() => ({ ok: resp.ok, data: { code: 'N/A' } }));
+        })
+        .then(({ ok, data }) => {
+            if (ok) {
+                 // Mostrar el código recibido del backend en el modal
+                 simulatedCodeDisplay.textContent = data.code || 'ERROR_CODE';
+                 twoFactorMensaje.textContent = `Llave generada en el servidor (30s). Cópiala para verificar.`;
+                 twoFactorMensaje.className = 'success';
+            } else {
+                 simulatedCodeDisplay.textContent = 'ERROR';
+                 twoFactorMensaje.textContent = 'Error al generar llave 2FA en el servidor.';
+                 twoFactorMensaje.className = 'error';
+            }
+        }).catch(err => {
+            simulatedCodeDisplay.textContent = 'ERROR';
+            twoFactorMensaje.textContent = 'Fallo de red al generar llave.';
+            twoFactorMensaje.className = 'error';
+        });
     }
+
+    // --- Lógica de la Segunda Etapa: Verificación 2FA ---
+    verify2faBtn.addEventListener('click', function() {
+        const code = twoFactorCodeInput.value.trim();
+
+        if (!code || !currentUsuarioId) {
+            twoFactorMensaje.textContent = 'Falta el código o el ID de usuario.';
+            twoFactorMensaje.className = 'error';
+            return;
+        }
+
+        fetch(VERIFY_2FA_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId: currentUsuarioId, code: code })
+        })
+        .then(response => {
+            return response.text().then(text => {
+                if (response.ok) {
+                    // Éxito total de LOGIN + 2FA
+                    modal.style.display = 'none'; // Ocultar el pop-up
+                    mostrarMensaje('success', text || 'Inicio de sesión y verificación 2FA exitosos!');
+                } else if (response.status === 401) {
+                    twoFactorMensaje.textContent = text || 'Código 2FA incorrecto o expirado.';
+                    twoFactorMensaje.className = 'error';
+                } else {
+                    twoFactorMensaje.textContent = `Error: ${text || 'Error inesperado.'}`;
+                    twoFactorMensaje.className = 'error';
+                }
+            });
+        })
+        .catch(error => {
+            twoFactorMensaje.textContent = 'Fallo de red en la verificación 2FA.';
+            twoFactorMensaje.className = 'error';
+            console.error('Fetch error:', error);
+        });
+    });
 </script>
 
 </body>
 </html>
-
-<!--
-El html se conecta con el Controller por medio del @RequestBody, esto le permite al controller confirmar que
-se están cumpliendo sus requisitos.
-
-Hay un event listener que estará atento a que se de click en el botón de submit, y el prvent default permitirá
-enviar los datos a través del JavaScript, con el fetch llama al api que se hizo en el modelo, y lo asigna como
-un post, luego por medio con el header le avisa a springboot que el cuerpo es un JSON, y convierte las
-credenciales en un string de JSON.
-
-Si sale bien continuará con el login, y si no, dará error dependiendo de lo que haya salido mal
--->
