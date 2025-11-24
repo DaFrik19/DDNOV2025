@@ -2,31 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio de Sesión - Ameribank</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 2rem auto; padding: 0 15px; }
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        button:hover { background-color: #0056b3; }
+        /* Estilo base para usar la fuente Inter de Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
 
-        .error { color: red; font-weight: bold; }
-        .success { color: green; font-weight: bold; }
-
+        /* Ocultar el modal por defecto y centrarlo */
         #twoFactorModal {
             display: none;
             position: fixed;
@@ -34,67 +19,75 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 1000;
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 25px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .modal-content h2 { color: #007bff; }
-        #twoFactorCode { margin-top: 15px; }
-
-        .simulated-code {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #28a745;
-            padding: 10px;
-            border: 2px dashed #28a74550;
-            margin: 10px 0;
-            border-radius: 4px;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-<h1>Inicio de Sesión de Cliente</h1>
-<form id="loginForm">
-    <input name="usr" id="usr" placeholder="Usuario" required><br>
-    <input type="password" name="pwd" id="pwd" placeholder="Contraseña" required><br>
-    <br>
-    <button type="submit">Iniciar Sesión</button>
-</form>
+<!-- Contenedor Principal (Login Card) -->
+<div class="w-full max-w-sm bg-white p-8 md:p-10 shadow-2xl rounded-xl border border-gray-100">
 
-<div id="mensaje" style="margin-top: 15px;"></div>
+    <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Ameribank Login</h1>
 
+    <form id="loginForm" class="space-y-5">
+        <div>
+            <label for="usr" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+            <input name="usr" id="usr" placeholder="Tu nombre de usuario o correo" required
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+        </div>
+
+        <div>
+            <label for="pwd" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <input type="password" name="pwd" id="pwd" placeholder="Tu contraseña secreta" required
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+        </div>
+
+        <button type="submit"
+                class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            Iniciar Sesión
+        </button>
+    </form>
+
+    <!-- Mensaje de Estado (Éxito/Error) -->
+    <div id="mensaje" class="mt-4 p-3 rounded-lg text-center font-medium" style="min-height: 48px;"></div>
+</div>
+
+<!-- Modal de Verificación 2FA -->
 <div id="twoFactorModal">
-    <div class="modal-content">
-        <h2>Verificación 2FA Requerida</h2>
-        <p>Llave generada en el servidor.</p>
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-11/12 max-w-md border border-gray-200">
+        <h2 class="text-2xl font-semibold text-center text-indigo-700 mb-4">Verificación 2FA Requerida</h2>
+        <p class="text-gray-600 text-center mb-4">Ingresa el código temporal generado por el servidor.</p>
 
-        <div id="simulatedCodeDisplay" class="simulated-code">
+        <!-- Código Simulado -->
+        <div id="simulatedCodeDisplay" class="text-4xl font-extrabold text-green-600 bg-green-50 p-4 rounded-xl border-2 border-dashed border-green-200 mb-6 text-center select-all">
             Cargando código...
         </div>
 
-        <input type="text" id="twoFactorCode" placeholder="Ingresa código 2FA" required><br>
-        <button id="verify2faBtn" style="margin-top: 15px;">Verificar Código</button>
-        <div id="twoFactorMensaje" style="margin-top: 10px;"></div>
+        <input type="text" id="twoFactorCode" placeholder="Ingresa código 2FA" required maxlength="7"
+               class="w-full p-3 text-center border-2 border-indigo-300 rounded-lg text-xl font-bold tracking-wider focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+
+        <button id="verify2faBtn"
+                class="w-full mt-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+            Verificar Código
+        </button>
+
+        <div id="twoFactorMensaje" class="mt-4 text-center text-sm font-medium"></div>
     </div>
 </div>
 
 <script>
+    // Configuración de URLs
     const LOGIN_URL = '/api/login/loggear';
     const GENERATE_2FA_URL = '/api/2fa/generate';
     const VERIFY_2FA_URL = '/api/2fa/verify';
     const REDIRECT_URL_CLIENTE = 'http://localhost:8081/indexCli.html';
     const REDIRECT_URL_ADMIN = 'http://localhost:8081/indexAdm.html';
 
+    // Elementos del DOM
     const form = document.getElementById('loginForm');
     const mensajeDiv = document.getElementById('mensaje');
     const modal = document.getElementById('twoFactorModal');
@@ -103,13 +96,23 @@
     const twoFactorMensaje = document.getElementById('twoFactorMensaje');
     const simulatedCodeDisplay = document.getElementById('simulatedCodeDisplay');
 
+    // Variables de Estado
     let currentUsuarioId = null;
+    let intendedRedirectUrl = null;
 
+    // Función para mostrar mensajes de estado con estilo Tailwind
     function mostrarMensaje(tipo, texto) {
         mensajeDiv.textContent = texto;
-        mensajeDiv.className = tipo;
+        if (tipo === 'success') {
+            mensajeDiv.className = 'mt-4 p-3 rounded-lg text-center font-medium bg-green-100 text-green-800';
+        } else if (tipo === 'error') {
+            mensajeDiv.className = 'mt-4 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
+        } else {
+            mensajeDiv.className = 'mt-4 p-3 rounded-lg text-center font-medium'; // Limpiar o neutral
+        }
     }
 
+    // Función para mostrar el modal 2FA
     function mostrarModal2FA() {
         modal.style.display = 'flex';
         twoFactorCodeInput.value = '';
@@ -117,9 +120,11 @@
         simulatedCodeDisplay.textContent = 'Generando...';
     }
 
+    // --- MANEJO DEL FORMULARIO DE LOGIN ---
     form.addEventListener('submit', function(event) {
         event.preventDefault();
         mostrarMensaje('', '');
+        intendedRedirectUrl = null;
 
         const usr = document.getElementById('usr').value;
         const pwd = document.getElementById('pwd').value;
@@ -137,24 +142,31 @@
         })
         .then(({ status, data }) => {
 
-            if (status === 200 && data.status === 'ADMIN_LOGIN' && data.usuarioId) {
-                mostrarMensaje('success', data.message || 'Inicio de sesión de Admin exitoso. Redirigiendo...');
-                window.location.href = REDIRECT_URL_ADMIN;
-            }
+            const isAuthSuccess = (
+                (status === 200 && data.status === 'ADMIN_LOGIN') ||
+                (status === 202 && data.status === '2FA_REQUIRED')
+            );
 
-            else if (status === 202 && data.status === '2FA_REQUIRED' && data.usuarioId) {
+            if (isAuthSuccess && data.usuarioId) {
                 currentUsuarioId = data.usuarioId;
+
+                if (data.status === 'ADMIN_LOGIN') {
+                    // Admin (HTTP 200) -> Redirección a Admin
+                    intendedRedirectUrl = REDIRECT_URL_ADMIN;
+                    mostrarMensaje('success', data.message || 'Credenciales de Admin válidas. Verificación 2FA iniciada.');
+                } else if (data.status === '2FA_REQUIRED') {
+                    // Cliente (HTTP 202) -> Redirección a Cliente
+                    intendedRedirectUrl = REDIRECT_URL_CLIENTE;
+                    mostrarMensaje('success', data.message || 'Credenciales válidas. Verificación 2FA iniciada.');
+                }
+
                 mostrarModal2FA();
                 generate2faKey(data.usuarioId);
-                mostrarMensaje('success', data.message || 'Credenciales válidas. Verificación 2FA iniciada.');
             }
 
+            // MANEJO DE ERRORES (401 UNATHORIZED, etc.)
             else if (status === 401) {
                 mostrarMensaje('error', data.message || 'Credenciales incorrectas.');
-            }
-
-            else if (status >= 200 && status < 300) {
-                 mostrarMensaje('success', data.message || 'Inicio de sesión exitoso sin 2FA.');
             }
 
             else {
@@ -167,6 +179,7 @@
         });
     });
 
+    // --- GENERACIÓN DE CÓDIGO 2FA ---
     function generate2faKey(usuarioId) {
          fetch(GENERATE_2FA_URL, {
             method: 'POST',
@@ -181,26 +194,23 @@
         .then(({ ok, data }) => {
             if (ok) {
                  simulatedCodeDisplay.textContent = data.code || 'ERROR_CODE';
-                 twoFactorMensaje.textContent = `Llave generada en el servidor (30s). Cópiala para verificar.`;
-                 twoFactorMensaje.className = 'success';
+                 twoFactorMensaje.innerHTML = `<span class="text-green-600">Llave generada en el servidor (30s). Cópiala para verificar.</span>`;
             } else {
                  simulatedCodeDisplay.textContent = 'ERROR';
-                 twoFactorMensaje.textContent = 'Error al generar llave 2FA en el servidor.';
-                 twoFactorMensaje.className = 'error';
+                 twoFactorMensaje.innerHTML = `<span class="text-red-600">Error al generar llave 2FA en el servidor.</span>`;
             }
         }).catch(err => {
             simulatedCodeDisplay.textContent = 'ERROR';
-            twoFactorMensaje.textContent = 'Fallo de red al generar llave.';
-            twoFactorMensaje.className = 'error';
+            twoFactorMensaje.innerHTML = `<span class="text-red-600">Fallo de red al generar llave.</span>`;
         });
     }
 
+    // --- VERIFICACIÓN DE CÓDIGO 2FA ---
     verify2faBtn.addEventListener('click', function() {
         const code = twoFactorCodeInput.value.trim();
 
         if (!code || !currentUsuarioId) {
-            twoFactorMensaje.textContent = 'Falta el código o el ID de usuario.';
-            twoFactorMensaje.className = 'error';
+            twoFactorMensaje.innerHTML = `<span class="text-red-600">Falta el código o el ID de usuario.</span>`;
             return;
         }
 
@@ -215,23 +225,20 @@
                     modal.style.display = 'none';
                     mostrarMensaje('success', text || 'Inicio de sesión y verificación 2FA exitosos!');
 
-                    window.location.href = REDIRECT_URL_CLIENTE;
+                    // Redirige a la URL almacenada (Admin o Cliente)
+                    window.location.href = intendedRedirectUrl || REDIRECT_URL_CLIENTE;
                 } else if (response.status === 401) {
                     const deniedMessage = "Acceso Denegado: Código incorrecto o expirado.";
 
-                    twoFactorMensaje.textContent = deniedMessage;
-                    twoFactorMensaje.className = 'error';
-
+                    twoFactorMensaje.innerHTML = `<span class="text-red-600">${deniedMessage}</span>`;
                     mostrarMensaje('error', deniedMessage);
                 } else {
-                    twoFactorMensaje.textContent = `Error del Servidor: ${text || 'Error inesperado.'}`;
-                    twoFactorMensaje.className = 'error';
+                    twoFactorMensaje.innerHTML = `<span class="text-red-600">Error del Servidor: ${text || 'Error inesperado.'}</span>`;
                 }
             });
         })
         .catch(error => {
-            twoFactorMensaje.textContent = 'Fallo de red en la verificación 2FA.';
-            twoFactorMensaje.className = 'error';
+            twoFactorMensaje.innerHTML = `<span class="text-red-600">Fallo de red en la verificación 2FA.</span>`;
             console.error('Fetch error:', error);
         });
     });
