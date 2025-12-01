@@ -2,30 +2,194 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Cliente - Ameribank</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Cliente - AmeriBank</title>
+    <link rel="stylesheet" href="/css/styles1.css">
+    <script>
+        function mostrarMensaje(mensaje, tipo) {
+            const div = document.getElementById('mensaje');
+            div.textContent = mensaje;
+            div.className = `mensaje ${tipo}`;
+            div.style.display = 'block';
+
+            setTimeout(() => {
+                div.style.display = 'none';
+            }, 5000);
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('registroForm').reset();
+            mostrarMensaje('Formulario limpiado correctamente', 'success');
+        }
+
+        function validarFormulario() {
+            const rfc = document.getElementById('rfc').value;
+            const curp = document.getElementById('curp').value;
+            const email = document.getElementById('email').value;
+
+            if (rfc.length !== 13) {
+                mostrarMensaje('El RFC debe tener 13 caracteres', 'error');
+                return false;
+            }
+
+            if (curp.length !== 18) {
+                mostrarMensaje('La CURP debe tener 18 caracteres', 'error');
+                return false;
+            }
+
+            if (!email.includes('@')) {
+                mostrarMensaje('Ingrese un email válido', 'error');
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 </head>
 <body>
-<h1>Registro de Cliente</h1>
-<form action="/api/clientes/registrar" method="post">
-    <input name="numeroCliente" placeholder="Número de cliente" required><br>
-    <input name="nombre" placeholder="Nombre" required><br>
-    <input name="apellidoPat" placeholder="Apellido paterno" required><br>
-    <input name="apellidoMat" placeholder="Apellido materno"><br>
-    <input name="fechaNac" type="date" required><br>
-    <input name="rfc" placeholder="RFC" required><br>
-    <input name="curp" placeholder="CURP" required><br>
-    <input name="email" type="email" placeholder="Correo electrónico" required><br>
-    <input name="celular" placeholder="Celular" required><br>
-    <textarea name="direccion" placeholder="Dirección"></textarea><br>
-    <input name="ciudad" placeholder="Ciudad"><br>
-    <input name="estado" placeholder="Estado"><br>
-    <input name="cp" placeholder="Código Postal"><br>
-    <select name="estatus" required>
-        <option value="ACTIVO">ACTIVO</option>
-        <option value="SUSPENDIDO">SUSPENDIDO</option>
-        <option value="BLOQUEADO">BLOQUEADO</option>
-    </select><br><br>
-    <button type="submit">Registrar</button>
-</form>
+<div class="container">
+    <div class="header">
+        <h1>🏦 AmeriBank</h1>
+        <p>Gestión de Clientes - Nuevo Registro</p>
+    </div>
+
+    <div class="content-section">
+        <div class="section-header">
+            <h2> Registro de Nuevo Cliente</h2>
+            <p>Complete toda la información requerida para el registro</p>
+        </div>
+
+        <div id="mensaje" class="mensaje" style="display: none;"></div>
+
+        <form id="registroForm" action="/api/clientes/registrar" method="post" class="form-container" onsubmit="return validarFormulario()">
+
+            <!-- Información Básica -->
+            <div class="form-section">
+                <h3> Información Personal</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numeroCliente">Número de Cliente *</label>
+                        <input type="text" id="numeroCliente" name="numeroCliente" required
+                               placeholder="Ej: CLI-001">
+                    </div>
+                    <div class="form-group">
+                        <label for="estatus">Estatus *</label>
+                        <select id="estatus" name="estatus" required>
+                            <option value="">Seleccione estatus</option>
+                            <option value="ACTIVO">ACTIVO</option>
+                            <option value="SUSPENDIDO">SUSPENDIDO</option>
+                            <option value="BLOQUEADO">BLOQUEADO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre">Nombre Completo *</label>
+                        <input type="text" id="nombre" name="nombre" required
+                               placeholder="Ej: Juan Carlos">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="apellidoPat">Apellido Paterno *</label>
+                        <input type="text" id="apellidoPat" name="apellidoPat" required
+                               placeholder="Ej: Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellidoMat">Apellido Materno</label>
+                        <input type="text" id="apellidoMat" name="apellidoMat"
+                               placeholder="Ej: García">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fechaNac">Fecha de Nacimiento *</label>
+                        <input type="date" id="fechaNac" name="fechaNac" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="celular">Celular *</label>
+                        <input type="tel" id="celular" name="celular" required
+                               placeholder="Ej: 5512345678">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentación -->
+            <div class="form-section">
+                <h3> Documentación Oficial</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rfc">RFC *</label>
+                        <input type="text" id="rfc" name="rfc" required
+                               placeholder="Ej: PEGF800101ABC" maxlength="13"
+                               style="text-transform: uppercase">
+                        <small class="input-hint">13 caracteres</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="curp">CURP *</label>
+                        <input type="text" id="curp" name="curp" required
+                               placeholder="Ej: PEGF800101HDFRMC01" maxlength="18"
+                               style="text-transform: uppercase">
+                        <small class="input-hint">18 caracteres</small>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="form-section">
+                <h3> Información de Contacto</h3>
+                <div class="form-group">
+                    <label for="email">Correo Electrónico *</label>
+                    <input type="email" id="email" name="email" required
+                           placeholder="Ej: juan.perez@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección Completa</label>
+                    <textarea id="direccion" name="direccion" rows="3"
+                              placeholder="Ej: Calle Principal #123, Colonia Centro"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ciudad">Ciudad</label>
+                        <input type="text" id="ciudad" name="ciudad"
+                               placeholder="Ej: Ciudad de México">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <input type="text" id="estado" name="estado"
+                               placeholder="Ej: CDMX">
+                    </div>
+                    <div class="form-group">
+                        <label for="cp">Código Postal</label>
+                        <input type="text" id="cp" name="cp"
+                               placeholder="Ej: 01000" maxlength="5">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    Registrar Cliente
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">
+                     Limpiar Formulario
+                </button>
+                <a href="/actualizar_cliente.html" class="btn btn-tertiary">
+                     Gestionar Clientes
+                </a>
+            </div>
+
+            <div class="form-footer">
+                <p>💡 <strong>Nota:</strong> Los campos marcados con * son obligatorios.</p>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>
